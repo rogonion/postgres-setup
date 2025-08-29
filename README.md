@@ -6,12 +6,15 @@ A utility for creating a postgres container image with the option of including a
 
 Pre-requisites:
 
-1. [Podman](https://podman.io/) or [Docker](https://www.docker.com/).
-2. [Python](https://www.python.org/) - Created with version 3.13.
+- [Podman](https://podman.io/) or [Docker](https://www.docker.com/).
+- [Python](https://www.python.org/) - Created with version 3.13.
+- [Poetry](https://python-poetry.org/docs/).
+
+Run `poetry install` to set up the environment.
 
 ## Usage
 
-Run `python build.py -h` or `python build.py --help` for script usage.
+Run `poetry run python build.py -h` or `poetry run python build.py --help` for script usage.
 
 The list of extensions can be found [here](extensions/README.md).
 
@@ -29,6 +32,21 @@ The basic flow of the [script](build.py) is as follows:
 3. Build the final temporary `Containerfile`.
 
 ## Application Container Image Features
+
+### Ports
+
+<table>
+    <thead>
+        <th>Port</th>
+        <th>Purpose</th>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>5432</code></td>
+            <td>This is the <strong>default TCP port</strong> on which the PostgreSQL server listens for connections. To access the database from outside the container, this port must be mapped to a port on the host machine using the <code>-p</code> flag in the <code>docker run</code> command.</td>   
+        </tr>
+    </tbody>
+</table>
 
 ### Volumes
 
@@ -81,17 +99,3 @@ The basic flow of the [script](build.py) is as follows:
     </tbody>
 </table>
 
-### Ports
-
-<table>
-    <thead>
-        <th>Port</th>
-        <th>Purpose</th>
-    </thead>
-    <tbody>
-        <tr>
-            <td><code>5432</code></td>
-            <td>This is the <strong>default TCP port</strong> on which the PostgreSQL server listens for connections. To access the database from outside the container, this port must be mapped to a port on the host machine using the <code>-p</code> flag in the <code>docker run</code> command.</td>   
-        </tr>
-    </tbody>
-</table>
