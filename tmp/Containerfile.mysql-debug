@@ -1,0 +1,26 @@
+# Stage to build mysql_fdw
+FROM quay.io/fedora/fedora:42 AS mysqlfdw_builder
+
+# Install the official PostgreSQL Yum Repository for a supported version (e.g., 16)
+# This step adds the repository to your system's dnf configuration.
+RUN dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/F-42-x86_64/pgdg-fedora-repo-latest.noarch.rpm
+
+# Install miscellaneous dependencies
+RUN dnf -y update && \
+    dnf -y install gcc make git redhat-rpm-config
+
+# Install postgresql17-devel dependency for the extension headers
+RUN dnf -y install postgresql17-devel && \
+     echo "-----PostgresSQL Development Library Version: 17-----"
+
+# Install mysql-devel for the MySQL client development libraries
+RUN dnf -y install mysql8.4-devel && \
+    echo "-----MySQL Client Development Library Version: 8.4-----"
+
+# Download, compile, and install mysql_fdw from its source
+WORKDIR /tmp/mysql_fdw
+RUN git clone --branch REL-2_9_2 https://github.com/EnterpriseDB/mysql_fdw.git .
+
+RUN dnf clean all
+
+CMD [ "/bin/bash" ]

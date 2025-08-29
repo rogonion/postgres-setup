@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[co]
+*.pyd
+*.so
+.Python
+
+# PyCharm
+.idea/
+.vscode/
+
+# Project-specific
+.venv/
+.env
+/dist/
+*.log
+poetry.lock

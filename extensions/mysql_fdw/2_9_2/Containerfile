@@ -1,0 +1,20 @@
+# Stage to build mysql_fdw
+FROM quay.io/fedora/fedora:42
+
+# Install dependencies
+RUN dnf -y update && \
+    dnf -y install https://download.postgresql.org/pub/repos/yum/reporpms/F-42-x86_64/pgdg-fedora-repo-latest.noarch.rpm && \
+    dnf -y install @development-tools git redhat-rpm-config postgresql17-devel mysql8.4-devel
+
+# Download, compile, and install mysql_fdw from its source
+WORKDIR /tmp/mysql_fdw
+RUN git clone --branch REL-2_9_2 https://github.com/EnterpriseDB/mysql_fdw.git .
+# Compile the extension, using the correct path to pg_config
+RUN make USE_PGXS=1 PG_CONFIG=/usr/pgsql-17/bin/pg_config
+# Install the compiled files
+RUN make USE_PGXS=1 PG_CONFIG=/usr/pgsql-17/bin/pg_config install
+
+# Clean up
+WORKDIR /
+RUN rm -rf /tmp/mysql_fdw
+RUN dnf clean all
