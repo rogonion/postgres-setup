@@ -1,0 +1,122 @@
+ProjectName: "postgres-setup"
+BaseImage: "registry.opensuse.org/opensuse/leap:16.0" # must be openSUSE
+
+Buildah:
+  Path: "buildah"
+
+Postgres:
+  Version: "18.1"
+  MajorVersion: "18"
+  SourceUrl: "https://ftp.postgresql.org/pub/source/v18.1/postgresql-18.1.tar.bz2"
+  Prefix: "/usr/local/pgsql"
+  Build:
+    Dependencies: [
+      # Core Build Tools
+      "gcc", "make", "tar", "gzip", "curl", "which",
+      "glibc-devel", "flex", "bison", "pkg-config", "bzip2", "perl", "awk",
+
+      # Postgres Core Libs
+      "perl",
+
+      # NO Flag: --without-zlib
+      "zlib-devel",
+
+      # With Flag: --with-openssl
+      "libopenssl-devel",
+
+      # NO Flag: --without-readline
+      "readline-devel",
+
+      # With Fag: "--with-libxml"
+      "libxml2-devel",
+
+      # With Flag: --with-icu
+      "libicu-devel",  # Better internationalization/collation
+
+      # With Flag: --with-lz4
+      "liblz4-devel",  # TOAST compression
+
+      # With Flag: --with-zstd
+      "libzstd-devel",  # WAL/Backup compression
+
+      # With Flag: --with-systemd
+
+      # With Flag: --with-systemd
+      "systemd-devel"  # For systemd integration (optional but good)
+    ]
+    Flags:
+      #      - "--without-readline"
+      #      - "--without-zlib"
+      - "--with-libxml"
+      - "--with-icu"
+      - "--with-lz4"
+      - "--with-zstd"
+      - "--with-systemd"
+      - "--with-openssl"
+  Runtime:
+    Dependencies: [
+      # Core libs
+      "rsync", # Required for merging pgsql in extensions with final postgres image
+      "shadow", # Required for user creation
+      "procps", # Required for 'pg_ctl' status checks
+      "timezone", # Required for Postgres logging/timestamps
+
+      "libicu77",      # With Build.Flag: --with-icu
+      "liblz4-1",      # With Build.Flag:  --with-lz4
+      "libzstd1",      # With Build.Flag:  --with-zstd
+      "libsystemd0",   # With Build.Flag:  --with-systemd
+      "openssl-3",   # With Build.Flag:  --with-openssl
+      "libxml2-2",     # With Build.Flag:  --with-libxml
+      "libreadline8",  # NO Build.Flag: --without-readline
+    ] # Postgres specific (potentially dependent on Build.Dependencies)
+    Resources: "resources" # Path to folder containing entrypoint script, pg_hba.conf, and postgresql.conf
+
+Postgis:
+  Current: "3.6.1"
+  Versions:
+    "3.6.1":
+      SourceUrl: "https://download.osgeo.org/postgis/source/postgis-3.6.1.tar.gz"
+      Build:
+        Dependencies: [
+          # Core Build Tools
+          "make", "gcc", "gcc-c++", "findutils", "tar", "awk",
+
+          # Postgis Core Lobs
+          "libgeos-devel", "libproj-devel", "libjson-c-devel", "libxml2-devel",
+
+          # NO Flag: --without-raster
+          "gdal-devel",
+
+          # With Flag: --with-protobuf
+          "libprotobuf-c-devel",
+
+          # With Flag: --with-address-standardizer
+          "pcre2-devel"
+        ]
+        Flags:
+          #          - "--without-raster"
+          - "--with-pgconfig=/usr/local/pgsql/bin/pg_config"
+          - "--with-protobuf"
+          - "--with-address-standardizer"
+      Runtime:
+        Dependencies: [
+          # Core Libs
+          "libgeos3_12_2",  # GEOS (Geometry Engine)
+          "libproj25",  # PROJ (Projections)
+          "libjson-c5",  # JSON-C
+          "libxml2-2",  # XML support
+
+          # NO Build.Flag: --without-raster
+          "libgdal37",  # Main Raster Library
+          "libtiff6",  # TIFF support
+          "libcurl4",  # HTTP/Cloud raster support
+          "libsqlite3-0",  # GeoPackage/PROJ database support
+          "libjpeg8",  # JPEG support
+          "libpng16-16",  # PNG
+
+          # With Build.Flag: --with-protobuf
+          "libprotobuf-c1",
+
+          # With Build.Flag: --with-address-standardizer
+          "libpcre2-8-0"
+        ] # Postgis specific (potentially dependent on Build.Dependencies)

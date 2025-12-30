@@ -11,12 +11,11 @@ __pycache__/
 
 # Project-specific
 .venv/
-.env
 /dist/
 *.log
 poetry.lock
-
-# temp files and folders
-*.Containerfile
-**/temp*
-**/tmp*
+.task/
+**/.temp*
+**/.tmp*
+**/.env.*
+**/.env*

@@ -1,49 +1,142 @@
 # postgres-setup
 
-A utility for creating a postgres container image with the option of including a set of extensions.
+A utility for creating a customized, rootless PostgreSQL container image with the option of including compiled
+extensions like PostGIS.
 
-[Fedora](https://quay.io/repository/fedora/fedora?tab=tags) is used as the base of the images.
+**Base Image:** [openSUSE Leap 16.0](https://registry.opensuse.org/cgi-bin/cooverview)  
+**PostgreSQL Version:** 18.1 (Compiled from source)
 
-Pre-requisites:
+## Pre-requisites
 
-- [Podman](https://podman.io/) or [Docker](https://www.docker.com/).
-- [Python](https://www.python.org/) - Created with version 3.13.
-- [Poetry](https://python-poetry.org/docs/).
+**OS:** Linux-based.
 
-Run `poetry install` to set up the environment.
+<table>
+    <caption>Required Tools</caption>
+    <thead>
+        <tr>
+            <th>Package</th>
+            <th>Version</th>
+            <th>Notes</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Python</td>
+            <td>3.13+</td>
+            <td>
+                <p>Core language the CLI tool is written in.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><a href="https://python-poetry.org/docs/">Poetry</a></td>
+            <td>2.2.1+</td>
+            <td>
+                <p>Project dependency manager.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><a href="https://buildah.io/">Buildah</a></td>
+            <td>1.41.5+</td>
+            <td>
+                <p>Used to programmatically create OCI-compliant container images without a daemon.</p>
+            </td>
+        </tr>
+        <tr>
+            <td><a href="https://taskfile.dev/">Taskfile</a></td>
+            <td>3.46.3+</td>
+            <td>
+                <p>Optional. You can use the provided <a href="taskw">shell script wrapper</a> (<code>./taskw</code>) which scopes the binary to the project.</p>
+            </td>
+        </tr>
+    </tbody>
+</table>
 
 ## Usage
 
-Run `poetry run python build.py -h` or `poetry run python build.py --help` for script usage.
+List available tasks:
 
-The list of extensions can be found [here](extensions/README.md).
+```shell
+./taskw --list
+```
 
-The basic flow of the [script](build.py) is as follows:
-1. Load the [base](Containerfile) `Containerfile` into a temporary file.
-2. If extensions are specified in the arguments:
-   1. Search for each extension module by name and version.
-   2. If found, execute the extension `build_and_get_snippet` function. The function typically performs the following duties:
-      1. Optionally build the container image that compiles the extension from source.
-      2. Return the `Containerfile` snippet which may contain commands such as:
-         1. copy files from resulting build extension image.
-         2. install extension package.
-         3. install dependency packages required by extension.
-   3. Append the snippets to the temporary `Containerfile`.
-3. Build the final temporary `Containerfile`.
+Setup python virtual environment and install dependencies:
+
+```shell
+TASKFILE_BINARY="./taskw"
+
+$TASKFILE_BINARY init
+```
+
+View CLI tool options and build help:
+
+```shell
+TASKFILE_BINARY="./taskw"
+
+$TASKFILE_BINARY run -- --help
+```
+
+### Example
+
+Build postgres binaries from source:
+
+```shell
+TASKFILE_BINARY="./taskw"
+
+$TASKFILE_BINARY run -- containers core build
+```
+
+Build postgis extension:
+
+```shell
+TASKFILE_BINARY="./taskw"
+
+$TASKFILE_BINARY run -- containers extensions postgis build
+```
+
+Build postgres runtime with postgis extension:
+
+```shell
+TASKFILE_BINARY="./taskw"
+
+$TASKFILE_BINARY run -- containers runtime build --extensions postgis
+```
+
 
 ## Application Container Image Features
+
+### Extensions
+
+<table>
+    <thead>
+        <th>Extension</th> 
+        <th>Version</th> 
+        <th>Description</th> 
+    </thead> 
+    <tbody> 
+        <tr> 
+            <td><code>postgis</code></td> 
+            <td>3.6.1</td> 
+            <td><strong>Spatial Database Extender.</strong> Includes support for geographic objects, compiled with GDAL, PROJ, and GEOS.</td>
+        </tr>
+        <tr>
+            <td><code>pg_stat_statements</code></td>
+            <td>(Built-in)</td>
+            <td><strong>Query Performance Monitoring.</strong> Tracks execution statistics of all SQL statements executed. Enabled by default.</td>
+        </tr>
+    </tbody>
+</table>
 
 ### Ports
 
 <table>
     <thead>
         <th>Port</th>
-        <th>Purpose</th>
-    </thead>
+        <th>Purpose</th> 
+    </thead> 
     <tbody>
-        <tr>
-            <td><code>5432</code></td>
-            <td>This is the <strong>default TCP port</strong> on which the PostgreSQL server listens for connections. To access the database from outside the container, this port must be mapped to a port on the host machine using the <code>-p</code> flag in the <code>docker run</code> command.</td>   
+        <tr> 
+            <td><code>5432</code></td> 
+            <td><strong>Default PostgreSQL Port.</strong> Map this to your host using <code>-p 5432:5432</code> to access the database.</td>
         </tr>
     </tbody>
 </table>
@@ -55,14 +148,11 @@ The basic flow of the [script](build.py) is as follows:
         <th>Path</th>
         <th>Purpose</th>
     </thead>
-    <tbody>
-        <tr>
-            <td><code>/var/lib/pgsql/data/17</code></td>
-            <td>This is the <strong>data directory</strong> where all PostgreSQL files, including tables, indexes, and transaction logs, are stored. Mounting a volume to this path is crucial for data persistence.</td>   
-        </tr>
-        <tr>
-            <td><code>/entrypoint-initdb.d</code></td>
-            <td>customize the database setup when a container is started for the very first time. You can place shell scripts (.sh), SQL scripts (.sql), and compressed SQL files (.sql.gz) in a local directory on your host machine and mount it to <code>/entrypoint-initdb.d</code> inside the container.</td>
+    <tbody> 
+        <tr> 
+            <td><code>/var/lib/pgsql/data/18</code></td> 
+            <td><strong>Data Directory.</strong> Stores all database files (tables, WAL, indexes).
+            <strong>Note:</strong> Ensure you mount a volume here to persist data across restarts.</td>
         </tr>
     </tbody>
 </table>
@@ -70,7 +160,7 @@ The basic flow of the [script](build.py) is as follows:
 ### Environment variables
 
 <table>
-    <thead>
+    <thead> 
         <th>Name</th>
         <th>Default</th>
         <th>Purpose</th>
@@ -79,22 +169,17 @@ The basic flow of the [script](build.py) is as follows:
         <tr>
             <td><code>POSTGRES_USER</code></td>
             <td><code>postgres</code></td>
-            <td>Sets the superuser for the database.</td>   
+            <td>Sets the superuser for the database.</td>
         </tr>
         <tr>
             <td><code>POSTGRES_PASSWORD</code></td>
-            <td></td>
-            <td>Sets the password for the superuser. This is a required variable for security.</td>   
-        </tr>
-        <tr>
-            <td><code>POSTGRES_DB</code></td>
-            <td></td>
-            <td>Specifies the name of the database to be created during initialization.</td>   
+            <td>(None)</td>
+            <td>Sets the password for the superuser. <strong>Highly Recommended</strong> for security.</td>
         </tr>
         <tr>
             <td><code>PGDATA</code></td>
-            <td></td>
-            <td>Overrides the default location for the data directory.</td>   
+            <td><code>/var/lib/pgsql/data/18</code></td>
+            <td>Internal pointer to the data volume. Generally should not be changed.</td>
         </tr>
     </tbody>
 </table>

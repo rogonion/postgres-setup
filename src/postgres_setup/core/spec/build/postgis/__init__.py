@@ -1,0 +1,1 @@
+from .postgis import PostgisConfig

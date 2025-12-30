@@ -1,0 +1,29 @@
+version: '3'
+
+env:
+  ENV: '.tmp'
+  POSTGRES_SETUP_POETRY: 'poetry' # path to poetry
+
+dotenv: [ '.env', '{{.ENV}}/.env', '{{.HOME}}/.env' ]
+
+tasks:
+  init:
+    desc: "Configure poetry and install dependencies"
+    cmds:
+      - $POSTGRES_SETUP_POETRY install
+    sources:
+      - pyproject.toml
+      - poetry.lock
+    generates:
+      - .venv/bin/python
+  run:
+    desc: "Run the CLI tool"
+    cmds:
+      - $POSTGRES_SETUP_POETRY run python -m postgres_setup.main {{.CLI_ARGS}}
+  clean:
+    desc: "Remove virtual environment and temporary artifacts"
+    cmds:
+      - rm -rf .venv
+      - rm -rf dist
+      - find . -type d -name "__pycache__" -exec rm -rf {} +
+      - echo "Clean complete"
