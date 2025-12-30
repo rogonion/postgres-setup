@@ -1,0 +1,31 @@
+# /etc/containers/systemd/postgres.container
+
+[Unit]
+Description=Postgres 18 Database
+After=network-online.target
+Requires=postgres-data.volume
+
+[Container]
+# 1. The Image Contract
+Image=localhost/postgres:18.1
+
+# 2. The User Contract (Explicitly set UID)
+# This flags tells Podman: "Run as User 26 inside"
+User=26
+Group=26
+
+# 3. The Storage Contract
+# Mount the volume defined above to PGDATA
+Volume=postgres-data.volume:/var/lib/pgsql/data
+
+# 4. Networking & Ports
+PublishPort=5432:5432
+
+# 5. Environment
+Environment=POSTGRES_PASSWORD=mysecret
+Environment=PGDATA=/var/lib/pgsql/data
+
+[Service]
+# Systemd specific restart policy
+Restart=always
+TimeoutStartSec=900

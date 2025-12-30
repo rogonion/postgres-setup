@@ -11,7 +11,7 @@ app = typer.Typer(help="Core binaries for postgres.")
 
 @app.command("build", help="Build postgres binaries from source (core).")
 def build(
-        spec_file: Optional[Path] = typer.Option("specs/build.yaml", "--spec", "--s", help="Path to build specification file."),
+        spec_file: Optional[Path] = typer.Option("configs/build.yaml", "--spec", "--s", help="Path to build specification file."),
         cache_prefix: Optional[str] = typer.Option("", "--cache-prefix", "--c", help="Optional. Custom prefix for generated images acting as cache layers.")
 ):
     """
@@ -30,7 +30,7 @@ def build(
 
 @app.command("delete-cache", help="Delete cache images used to build postgres binaries from source (core).")
 def delete_cache(
-        spec_file: Optional[Path] = typer.Option("specs/build.yaml", "--spec", "--s", help="Path to build specification file."),
+        spec_file: Optional[Path] = typer.Option("configs/build.yaml", "--spec", "--s", help="Path to build specification file."),
         cache_prefix: Optional[str] = typer.Option("", "--cache-prefix", "--c", help="Optional. Custom prefix for generated images acting as cache layers.")
 ):
     """

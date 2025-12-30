@@ -70,6 +70,8 @@ Postgres:
       "libreadline8",  # NO Build.Flag: --without-readline
     ] # Postgres specific (potentially dependent on Build.Dependencies)
     Resources: "resources" # Path to folder containing entrypoint script, pg_hba.conf, and postgresql.conf
+    Uid: 26 # postgres user id
+    Gid: 26 # postgres group id
 
 Postgis:
   Current: "3.6.1"

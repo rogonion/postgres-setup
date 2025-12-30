@@ -30,7 +30,7 @@ def parse_extensions(value: str) -> List[Tuple[str, str]]:
 
 @app.command("build", help="Build a postgres runtime image with extensions (optional).")
 def build(
-        spec_file: Optional[Path] = typer.Option("specs/build.yaml", "--spec", "--s",
+        spec_file: Optional[Path] = typer.Option("configs/build.yaml", "--spec", "--s",
                                                  help="Path to build specification file."),
         image_name: Optional[str] = typer.Option("postgres", "--image-name", "--n",
                                                  help="Name of new postgres runtime image."),
@@ -62,7 +62,7 @@ def build(
 
 @app.command("delete-cache", help="Delete cache images used to build postgres runtime image.")
 def delete_cache(
-        spec_file: Optional[Path] = typer.Option("specs/build.yaml", "--spec", "--s",
+        spec_file: Optional[Path] = typer.Option("configs/build.yaml", "--spec", "--s",
                                                  help="Path to build specification file."),
         cache_prefix: Optional[str] = typer.Option("", "--cache-prefix", "--c",
                                                    help="Optional. Custom prefix for generated images acting as cache layers.")

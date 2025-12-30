@@ -1,0 +1,8 @@
+# /etc/containers/systemd/postgres-data.volume
+
+[Volume]
+# We can map this to our specific Host Path (like we discussed for Ceph/JuiceFS)
+Options=type=none,o=bind,device=/mnt/juicefs/project-a/db
+User=26
+Group=26
+Label=postgres-db

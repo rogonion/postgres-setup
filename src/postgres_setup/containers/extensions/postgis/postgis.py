@@ -12,7 +12,7 @@ app = typer.Typer(help="Add geospatial capabilities to postgres.")
 @app.command("build", help="Build postgis binaries from source (postgis).")
 def build(
         version: str = typer.Option("latest", "--version", "--v", help="Postgis version."),
-        spec_file: Optional[Path] = typer.Option("specs/build.yaml", "--spec", "--s",
+        spec_file: Optional[Path] = typer.Option("configs/build.yaml", "--spec", "--s",
                                                  help="Path to build specification file."),
         cache_prefix: Optional[str] = typer.Option("", "--cache-prefix", "--c",
                                                    help="Optional. Custom prefix for generated images acting as cache layers.")
@@ -34,7 +34,7 @@ def build(
 
 @app.command("delete-cache", help="Delete cache images used to build postgis binaries from source (postgis).")
 def delete_cache(
-        spec_file: Optional[Path] = typer.Option("specs/build.yaml", "--spec", "--s",
+        spec_file: Optional[Path] = typer.Option("configs/build.yaml", "--spec", "--s",
                                                  help="Path to build specification file."),
         cache_prefix: Optional[str] = typer.Option("", "--cache-prefix", "--c",
                                                    help="Optional. Custom prefix for generated images acting as cache layers.")

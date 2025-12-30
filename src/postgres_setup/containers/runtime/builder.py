@@ -89,11 +89,21 @@ class RuntimeBuilder(BaseBuilder):
             base_psql_dir = "/var/lib/pgsql"
 
             container.run(
-                command=["groupadd", "postgres"]
+                command=["groupadd", "-r", "-g", str(self.config.Postgres.Runtime.Gid), "postgres"]
             )
 
             container.run(
-                command=["useradd", "-r", "-g", "postgres", "-d", base_psql_dir, "-s", "/bin/bash", "postgres"]
+                command=["useradd", "-r", "-u", str(self.config.Postgres.Runtime.Uid), "-g",
+                         str(self.config.Postgres.Runtime.Gid), "-d", base_psql_dir, "-s", "/sbin/nologin", "-c",
+                         '"PostgreSQL Server"', "postgres"]
+            )
+
+            container.configure(
+                [
+                    ("--label", f"io.postgres.user.uid={self.config.Postgres.Runtime.Uid}"),
+                    ("--label", f"io.postgres.user.gid={self.config.Postgres.Runtime.Gid}"),
+                    ("--label", f"io.postgres.user.name=postgres"),
+                ]
             )
 
             current_step += 1
@@ -105,7 +115,8 @@ class RuntimeBuilder(BaseBuilder):
                 command=["mkdir", "-p", data_dir]
             )
             container.run(
-                command=["chown", "-R", "postgres:postgres", data_dir]
+                command=["chown", "-R", f"{self.config.Postgres.Runtime.Uid}:{self.config.Postgres.Runtime.Gid}",
+                         data_dir]
             )
             container.configure([
                 ("--env", f"PGDATA={data_dir}"),
@@ -131,7 +142,7 @@ class RuntimeBuilder(BaseBuilder):
             # Setup permissions
             container.run(
                 command=[
-                    "chown", "-R", "postgres:postgres",
+                    "chown", "-R", f"{self.config.Postgres.Runtime.Uid}:{self.config.Postgres.Runtime.Gid}",
                     "/usr/share/postgresql/config",
                     "/usr/local/bin/entrypoint.sh"
                 ]
@@ -144,7 +155,7 @@ class RuntimeBuilder(BaseBuilder):
             )
             container.configure([
                 ("--entrypoint", "/usr/local/bin/entrypoint.sh"),
-                ("--user", "postgres")
+                ("--user", str(self.config.Postgres.Runtime.Uid))
             ])
 
             current_step += 1
