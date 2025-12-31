@@ -69,7 +69,7 @@ class CoreBuilder(BaseBuilder):
             container.run_cached(
                 command=[
                     "sh", "-c",
-                    f"cd {src_dir} && make -j$(nproc) && make install",
+                    f"cd {src_dir} && make -j$(nproc) && make install-world-bin",
                 ],
                 extra_cache_keys={"step": "compile", "version": self.config.Postgres.Version}
             )
