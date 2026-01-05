@@ -1,10 +1,12 @@
 from pathlib import Path
 from typing import Tuple, List, Optional
 
+from postgres_setup.containers.extensions.pgvector import PgvectorRuntime
 from postgres_setup.containers.extensions.postgis import PostgisRuntime
+from postgres_setup.containers.extensions.rum import RumRuntime
 from postgres_setup.core import BaseBuilder, BuildSpec, prune_cache_images, BuildahContainer
 
-EXTENSIONS = ["postgis"]
+EXTENSIONS = ["postgis", "pgvector", "rum"]
 
 
 class RuntimeBuilder(BaseBuilder):
@@ -57,11 +59,13 @@ class RuntimeBuilder(BaseBuilder):
             self.log(
                 f"[bold blue]Step {current_step}[/bold blue]: Installing postgres runtime dependencies")
 
-            container.run(
+            container.run_cached(
                 command=[
-                            "zypper", "--non-interactive", "--gpg-auto-import-keys",
-                            "install", "--no-recommends", "-y"
-                        ] + self.config.Postgres.Runtime.Dependencies,
+                    "sh", "-c",
+                    f"""
+                        zypper --non-interactive refresh &&
+                        zypper --non-interactive install """ + " ".join(self.config.Postgres.Runtime.Dependencies)],
+                extra_cache_keys={"step": "deps", "packages": sorted(self.config.Postgres.Runtime.Dependencies)}
             )
 
             if self.extensions:
@@ -73,14 +77,23 @@ class RuntimeBuilder(BaseBuilder):
                         case 'postgis':
                             postgis_build = PostgisRuntime(self.config, container, extension[1])
                             postgis_build.build()
+                        case 'pgvector':
+                            pgvector_build = PgvectorRuntime(self.config, container, extension[1])
+                            pgvector_build.build()
+                        case 'rum':
+                            rum_build = RumRuntime(self.config, container, extension[1])
+                            rum_build.build()
                         case _:
                             self.log(f'[bold red]Error[/bold red]: ')
                             raise RuntimeError(f"Extension {extension[0]} not found.")
 
             container.run(
-                command=["zypper", "--non-interactive", "remove", "-y", "--clean-deps", "rsync"]
+                command=[
+                    "sh", "-c",
+                    f"""
+                    zypper --non-interactive remove -y --clean-deps rsync &&
+                    zypper clean --all"""]
             )
-            container.run(command=["zypper", "clean", "--all"])
 
             current_step += 1
             self.log(

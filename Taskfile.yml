@@ -11,6 +11,7 @@ tasks:
     desc: "Configure poetry and install dependencies"
     cmds:
       - $POSTGRES_SETUP_POETRY install
+      - mkdir -p .tmp
     sources:
       - pyproject.toml
       - poetry.lock

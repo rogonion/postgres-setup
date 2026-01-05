@@ -73,6 +73,36 @@ Postgres:
     Uid: 26 # postgres user id
     Gid: 26 # postgres group id
 
+Rum:
+  Current: "1.3.15"
+  Versions:
+    "1.3.15":
+      SourceUrl: "https://github.com/postgrespro/rum.git"
+      Build:
+        Dependencies: [
+          # Core Build Tools
+          "make", "gcc", "findutils", "git",
+        ]
+      Runtime:
+        Dependencies: [ ]
+
+Pgvector:
+  Current: "0.8.1"
+  Versions:
+    "0.8.1":
+      SourceUrl: "https://github.com/pgvector/pgvector.git"
+      Build:
+        Dependencies: [
+          # Core Build Tools
+          "make", "gcc", "findutils", "git",
+        ]
+        Flags:
+          - "-march=x86-64-v3" # Gen instructions for most CPUs made after 2015
+          - "-O3" # Prioritize execution speed
+          - "-flto" # Link Time Optimization
+      Runtime:
+        Dependencies: [ ]
+
 Postgis:
   Current: "3.6.1"
   Versions:

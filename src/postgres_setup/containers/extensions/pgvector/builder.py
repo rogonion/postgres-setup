@@ -1,34 +1,34 @@
-from postgres_setup.core import BaseBuilder, BuildahContainer, prune_cache_images, BuildSpec
+from postgres_setup.core import BaseBuilder, BuildSpec, BuildahContainer, prune_cache_images
 
 
-class PostgisBuilder(BaseBuilder):
+class PgvectorBuilder(BaseBuilder):
     def __init__(self, config: BuildSpec, ext_version: str = "", cache_prefix: str = ""):
         self._init_ext_version(config, ext_version)
         super().__init__(config, cache_prefix)
         self.base_image = f"{self.config.ProjectName}-core:{self.config.Postgres.Version}"
-        self.image_name = f"{self.config.ProjectName}-postgis"
+        self.image_name = f"{self.config.ProjectName}-pgvector"
         self.image_tag = self.config.Postgres.Version + "-" + self.ext_version
 
     def _init_ext_version(self, config: BuildSpec, ext_version: str):
         if not len(ext_version) > 0 or ext_version == "latest":
-            ext_version = config.Postgis.Current
+            ext_version = config.Pgvector.Current
 
-        for version, data in config.Postgis.Versions.items():
+        for version, data in config.Pgvector.Versions.items():
             if version == ext_version:
                 self.ext_version = ext_version
                 self.version_config = data
                 return
 
-        raise RuntimeError(f"No config found for postgis extension version {ext_version}")
+        raise RuntimeError(f"No config found for pgvector extension version {ext_version}")
 
     def _init_cache_prefix(self, cache_prefix: str):
         if len(cache_prefix) > 0:
             self.cache_prefix = cache_prefix
         else:
-            self.cache_prefix = f"{self.config.ProjectName}/cache/postgis/{self.ext_version}"
+            self.cache_prefix = f"{self.config.ProjectName}/cache/pgvector/{self.ext_version}"
 
     def build(self):
-        self.log(f"Starting build for Postgis {self.ext_version}", style="bold blue")
+        self.log(f"Starting build for Pgvector {self.ext_version}", style="bold blue")
 
         current_step = 1
         total_no_of_steps = 5
@@ -56,42 +56,32 @@ class PostgisBuilder(BaseBuilder):
                 current_step += 1
 
             self.log(
-                f"[bold blue]Step {current_step}/{total_no_of_steps}[/bold blue]: Downloading source from {self.config.Postgres.SourceUrl}")
-
-            src_dir = f"/tmp/postgis-{self.ext_version}"
-
+                f"[bold blue]Step {current_step}/{total_no_of_steps}[/bold blue]: Cloning {self.version_config.SourceUrl} tag {self.ext_version}")
+            src_dir = f"/tmp/pgvector-{self.ext_version}"
             container.run_cached(
                 command=[
-                    "sh", "-c",
-                    f"mkdir -p {src_dir} && curl -L '{self.version_config.SourceUrl}' | tar -xz -C {src_dir} --strip-components=1"
+                    "git", "clone", "--depth", "1", "--branch", f"v{self.ext_version}",
+                    self.version_config.SourceUrl, src_dir
                 ],
-                extra_cache_keys={"step": "source", "url": self.version_config.SourceUrl, "src_dir": src_dir}
-            )
-
-            current_step += 1
-            self.log(f"[bold blue]Step {current_step}/{total_no_of_steps}[/bold blue]: Configuring compilation")
-
-            config_flags = self.version_config.Build.Flags
-            if not any("pgconfig" in f for f in config_flags):
-                config_flags.append(f"--with-pgconfig={self.config.Postgres.Prefix}/bin/pg_config")
-
-            container.run_cached(
-                command=[
-                    "sh", "-c",
-                    f"cd {src_dir} && ./configure {' '.join(config_flags)}"
-                ],
-                extra_cache_keys={"step": "configure", "flags": sorted(config_flags)}
+                extra_cache_keys={"step": "source", "url": self.version_config.SourceUrl,
+                                  "version": f"v{self.ext_version}", "src_dir": src_dir}
             )
 
             current_step += 1
             self.log(f"[bold blue]Step {current_step}/{total_no_of_steps}[/bold blue]: Compiling and installing")
 
+            opt_flags = " ".join(self.version_config.Build.Flags)
             container.run_cached(
                 command=[
                     "sh", "-c",
-                    f"cd {src_dir} && make -j$(nproc) && make install",
+                    f"""
+                    cd {src_dir} && 
+                    export PG_CONFIG={self.config.Postgres.Prefix}/bin/pg_config &&
+                    make clean &&
+                    make OPTFLAGS='{opt_flags}' -j$(nproc) && 
+                    make install""",
                 ],
-                extra_cache_keys={"step": "compile", "version": self.config.Postgres.Version}
+                extra_cache_keys={"step": "compile", "version": self.config.Postgres.Version, "opt_flags": opt_flags}
             )
 
             current_step += 1
@@ -103,13 +93,13 @@ class PostgisBuilder(BaseBuilder):
 
             # Check if control file exists
             try:
-                container.run(["ls", f"{pg_ext_dir}/postgis.control"])
+                container.run(["ls", f"{pg_ext_dir}/vector.control"])
             except Exception:
-                self.log(f"[bold red]Error[/bold red]: postgis.control not found in {pg_ext_dir}")
+                self.log(f"[bold red]Error[/bold red]: vector.control not found in {pg_ext_dir}")
                 raise
 
             # Check dynamic linking
-            so_file_cmd = f"find {pg_lib_dir} -name 'postgis-*.so' | head -n 1"
+            so_file_cmd = f"find {pg_lib_dir} -name 'vector.so' | head -n 1"
 
             try:
                 # We use sh -c to allow the pipe and find command
@@ -118,7 +108,7 @@ class PostgisBuilder(BaseBuilder):
                 if "not found" in output:
                     self.log("[bold red]Linking Error[/bold red]: Missing dependencies detected")
                     self.log(output, style="dim red")
-                    raise RuntimeError("PostGIS compiled, but system dependencies are missing.")
+                    raise RuntimeError("Pgvector compiled, but system dependencies are missing.")
 
                 self.log("Verification successful.", style="bold green")
 
@@ -133,8 +123,8 @@ class PostgisBuilder(BaseBuilder):
 
             container.configure([
                 ("--label",
-                 f'org.opencontainers.image.title="PostgreSQL {self.config.Postgres.Version} with PostGIS {self.ext_version}"'),
-                ("--label", f'org.postgis.version={self.ext_version}'),
+                 f'org.opencontainers.image.title="PostgreSQL {self.config.Postgres.Version} with Pgvector {self.ext_version}"'),
+                ("--label", f'org.pgvector.version={self.ext_version}'),
             ])
             container.commit(image_name_tag)
 

@@ -1,7 +1,7 @@
 # postgres-setup
 
-A utility for creating a customized, rootless PostgreSQL container image with the option of including compiled
-extensions like PostGIS.
+A utility for creating a customized, rootless [PostgreSQL](https://www.postgresql.org/) container image with the option
+of including extensions from custom compiled ones to [contrib](https://www.postgresql.org/docs/current/contrib.html).
 
 **Base Image:** [openSUSE Leap 16.0](https://registry.opensuse.org/cgi-bin/cooverview)  
 **PostgreSQL Version:** 18.1 (Compiled from source)
@@ -90,7 +90,7 @@ Build postgis extension:
 ```shell
 TASKFILE_BINARY="./taskw"
 
-$TASKFILE_BINARY run -- containers extensions postgis build
+$TASKFILE_BINARY run -- containers extensions postgis,pgvector,rum build
 ```
 
 Build postgres runtime with postgis extension:
@@ -101,27 +101,200 @@ TASKFILE_BINARY="./taskw"
 $TASKFILE_BINARY run -- containers runtime build --extensions postgis
 ```
 
-
 ## Application Container Image Features
 
 ### Extensions
 
+Postgres provides a comprehensive set of extensions via its `contrib` package which is built by default.
+
+In addition, an additional set of extensions that have to be built/sourced elsewhere are provided by the CLI tool.
+
+Below is a sample set of extensions grouped by use-cases.
+
+#### Geospatial
+
 <table>
     <thead>
-        <th>Extension</th> 
+        <th>Extension</th>
         <th>Version</th> 
         <th>Description</th> 
     </thead> 
     <tbody> 
         <tr> 
-            <td><code>postgis</code></td> 
+            <td><a href="https://postgis.net/">postgis</a></td> 
             <td>3.6.1</td> 
-            <td><strong>Spatial Database Extender.</strong> Includes support for geographic objects, compiled with GDAL, PROJ, and GEOS.</td>
+            <td>
+                <p>Adds geospatial capabilities.</p>
+                <p>Provides <code>geometry</code> and <code>geography</code> types.</p>
+            </td>
+        </tr>
+        <tr> 
+            <td>postgis topology</td> 
+            <td></td> 
+            <td>Manage topological data (shared boundaries between shapes)</td>
         </tr>
         <tr>
-            <td><code>pg_stat_statements</code></td>
-            <td>(Built-in)</td>
-            <td><strong>Query Performance Monitoring.</strong> Tracks execution statistics of all SQL statements executed. Enabled by default.</td>
+            <td>address_standardizer</td>
+            <td></td>
+            <td>Normalizes address strings into parts (street, city, zip)</td>
+        </tr>
+    </tbody>
+</table>
+
+#### Semantic & AI Search
+
+<table>
+    <thead>
+        <th>Extension</th>
+        <th>Version</th> 
+        <th>Description</th> 
+    </thead> 
+    <tbody> 
+        <tr> 
+            <td><a href="https://github.com/pgvector/pgvector">pgvector</a></td> 
+            <td>0.8.1</td> 
+            <td>
+                <p>Adds vector search capabilities.</p>
+                <p>Provides <code>vector</code> type, and <code>hnsw</code> and <code>ivfflat</code> indexes.</p>
+            </td>
+        </tr>
+        <tr> 
+            <td>btree_gin</td> 
+            <td></td> 
+            <td>Manage topological data (shared boundaries between shapes)</td>
+        </tr>
+        <tr>
+            <td>address_standardizer</td>
+            <td>Built-in via <code>contrib</code></td>
+            <td>
+                <p>Allows standard types (int, uuid) to be indexed in GIN.</p> 
+                <p>Combine vectory query with hard scalar filter.</p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+#### Advanced Text Search
+
+<table>
+    <thead>
+        <th>Extension</th>
+        <th>Version</th> 
+        <th>Description</th> 
+    </thead> 
+    <tbody> 
+        <tr> 
+            <td><a href="https://github.com/postgrespro/rum">rum</a></td> 
+            <td>1.3.15</td> 
+            <td>
+                <p><code>RUM</code> Index - Inverted index that stores weights and positions alongside terms.</p>
+                <p>Good for fast ranking for search results by relevance or timestamps.</p>
+            </td>
+        </tr>
+        <tr>
+            <td>pg_trgm</td>
+            <td>Built-in via <code>contrib</code></td>
+            <td>
+                <p>Break text into 3 character trigrams for similarity comparison.</p>
+                <p>Good for fuzzy search (suggestions) and typo tolerance.</p>
+            </td>
+        </tr>
+        <tr>
+            <td>fuzzystrmatch</td>
+            <td>Built-in via <code>contrib</code></td>
+            <td>
+                <p>Algorithms for string phonetics (soundex, metaphone, levenshtein).</p>
+                <p>Good for matching names that sound similar but are spelled differently.</p>
+            </td>
+        </tr>
+        <tr>
+            <td>unaccent</td>
+            <td>Built-in via <code>contrib</code></td>
+            <td>
+                <p>Removes accents/diacritics from text.</p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+#### Performance and maintenance
+
+<table>
+    <thead>
+        <th>Extension</th>
+        <th>Version</th> 
+        <th>Description</th> 
+    </thead> 
+    <tbody>
+        <tr>
+            <td>pg_stat_statements</td>
+            <td>Built-in via <code>contrib</code></td>
+            <td>
+                <p>Tracks execution statistics of all SQL statements.</p>
+            </td>
+        </tr>
+        <tr>
+            <td>pg_buffercache</td>
+            <td>Built-in via <code>contrib</code></td>
+            <td>
+                <p>Inspects the contents of the shared buffer cache (RAM).</p>
+                <p>Debugging why specific tables are "hot" or getting evicted from memory.</p>
+            </td>
+        </tr>
+        <tr>
+            <td>auto_explain</td>
+            <td>Built-in via <code>contrib</code></td>
+            <td>
+                <p>Automatically logs the execution plan of slow queries.</p>
+            </td>
+        </tr>
+        <tr>
+            <td>pg_visibility</td>
+            <td>Built-in via <code>contrib</code></td>
+            <td>
+                <p>Inspects the visibility map and page-level details.</p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+#### Data Types & Utilities
+
+<table>
+    <thead>
+        <th>Extension</th>
+        <th>Version</th> 
+        <th>Description</th> 
+    </thead> 
+    <tbody>
+        <tr>
+            <td>uuid-ossp</td>
+            <td>Built-in via <code>contrib</code></td>
+            <td>
+                <p>Generates UUIDs (v1, v4, etc.).</p>
+            </td>
+        </tr>
+        <tr>
+            <td>citext</td>
+            <td>Built-in via <code>contrib</code></td>
+            <td>
+                <p>Case-insensitive text type.</p>
+                <p>Emails/Usernames: Handles User@Example.com = user@example.com automatically.</p>
+            </td>
+        </tr>
+        <tr>
+            <td>hstore</td>
+            <td>Built-in via <code>contrib</code></td>
+            <td>
+                <p>Key-value store within a single column.</p>
+            </td>
+        </tr>
+        <tr>
+            <td>pgcrypto</td>
+            <td>Built-in via <code>contrib</code></td>
+            <td>
+                <p>Cryptographic functions (hashing, encryption).</p>
+            </td>
         </tr>
     </tbody>
 </table>

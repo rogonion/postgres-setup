@@ -29,7 +29,11 @@ class CoreBuilder(BaseBuilder):
                 f"[bold blue]Step {current_step}/{total_no_of_steps}[/bold blue]: Installing build dependencies")
 
             container.run_cached(
-                command=["zypper", "install", "-y"] + self.config.Postgres.Build.Dependencies,
+                command=[
+                    "sh", "-c",
+                    f"""
+                        zypper --non-interactive refresh &&
+                        zypper --non-interactive install """ + " ".join(self.config.Postgres.Build.Dependencies)],
                 extra_cache_keys={"step": "deps", "packages": sorted(self.config.Postgres.Build.Dependencies)}
             )
 

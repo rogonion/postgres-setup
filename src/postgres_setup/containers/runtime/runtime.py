@@ -11,8 +11,8 @@ app = typer.Typer(help="A postgres runtime. Optionally with extensions.")
 
 def parse_extensions(value: str) -> List[Tuple[str, str]]:
     """
-    Converts 'postgis=3.6.1,another_extension=latest'
-    into [('postgis', '3.6.1'), ('another_extension', 'latest')]
+    Converts 'postgis=3.6.1,pgvector=latest'
+    into [('postgis', '3.6.1'), ('pgvector', 'latest')]
     """
     if not value:
         return []
@@ -37,7 +37,7 @@ def build(
         image_tag: Optional[str] = typer.Option("", "--image-tag", "--t",
                                                 help="Optional. Tag of new postgres runtime image"),
         extensions: Optional[str] = typer.Option("", "--extensions", "--e",
-                                                 help="Optional. Comma-separated list of extensions e.g, postgis=3.6.1, another_extension=latest"),
+                                                 help="Optional. Comma-separated list of extensions e.g, postgis=3.6.1, pgvector=latest"),
         cache_prefix: Optional[str] = typer.Option("", "--cache-prefix", "--c",
                                                    help="Optional. Custom prefix for generated images acting as cache layers.")
 ):
