@@ -167,7 +167,8 @@ class RuntimeBuilder(BaseBuilder):
                 ]
             )
             container.configure([
-                ("--entrypoint", "/usr/local/bin/entrypoint.sh"),
+                ("--entrypoint", '["/usr/local/bin/entrypoint.sh"]'),
+                ("--cmd", '["postgres"]'),
                 ("--user", str(self.config.Postgres.Runtime.Uid))
             ])
 

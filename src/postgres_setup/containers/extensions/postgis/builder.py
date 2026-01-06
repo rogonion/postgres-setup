@@ -31,9 +31,7 @@ class PostgisBuilder(BaseBuilder):
         self.log(f"Starting build for Postgis {self.ext_version}", style="bold blue")
 
         current_step = 1
-        total_no_of_steps = 5
-        if self.version_config.Build.Dependencies:
-            total_no_of_steps += 1
+        total_no_of_steps = 4
 
         with BuildahContainer(
                 base_image=self.base_image,
@@ -42,6 +40,7 @@ class PostgisBuilder(BaseBuilder):
                 cache_prefix=self.cache_prefix
         ) as container:
             if self.version_config.Build.Dependencies:
+                total_no_of_steps += 1
                 self.log(
                     f"[bold blue]Step {current_step}/{total_no_of_steps}[/bold blue]: Installing build dependencies")
 

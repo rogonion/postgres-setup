@@ -9,6 +9,14 @@ export POSTGRES_DB="${POSTGRES_DB:-postgres}"
 # The safe location where we baked the configs during build
 CONFIG_SOURCE="/usr/share/postgresql/config"
 
+if [ "$#" -eq 0 ]; then
+    set -- postgres
+fi
+
+if [ "${1#-}" != "$1" ]; then
+    set -- postgres "$@"
+fi
+
 # --- 2. Security Check ---
 # Only enforce password if we are initializing a new DB
 # We check if PGDATA is empty or missing
@@ -27,12 +35,10 @@ if [ -z "$(ls -A "$PGDATA" 2>/dev/null)" ]; then
     # We are already the 'postgres' user, so no need for sudo/gosu
     initdb -D "$PGDATA" -E UTF8
 
-    # B. Apply Configuration (Using RSYNC)
+    # B. Apply Configuration
     # Copies our custom conf files into the data directory
     if [ -d "$CONFIG_SOURCE" ]; then
         echo "Merging custom configurations..."
-        # -a: archive mode, -v: verbose
-        # --ignore-existing: If the user mounted a volume with their own conf, respect it.
         cp "$CONFIG_SOURCE"/* "$PGDATA/"
         chmod 700 "$PGDATA"
         chmod 600 "$PGDATA"/postgresql.conf "$PGDATA"/pg_hba.conf
@@ -70,7 +76,4 @@ else
     echo "Database directory is not empty. Skipping initialization."
 fi
 
-# --- 4. Main Execution ---
-echo "Starting PostgreSQL server..."
-# exec replaces the shell process with postgres, ensuring it gets signals (SIGTERM) correctly
-exec postgres -D "$PGDATA"
+exec "$@"

@@ -101,6 +101,35 @@ TASKFILE_BINARY="./taskw"
 $TASKFILE_BINARY run -- containers runtime build --extensions postgis
 ```
 
+Sample script to run the built postgres container using `podman`.
+
+```shell
+#!/bin/bash
+
+CONTAINER="postgres18.1"
+NETWORK="tumbleweed"
+NETWORK_ALIAS="postgres18.1"
+CONTAINER_UID=26
+HOST_PORT=5432
+VOLUME="postgres"
+ENV_POSTGRES_PASSWORD="postgres2025"
+IMAGE="localhost/postgres:18.1"
+
+podman volume exists $VOLUME || podman volume create $VOLUME
+
+podman unshare chown -R $CONTAINER_UID:$CONTAINER_UID $(podman volume inspect $VOLUME --format '{{.Mountpoint}}')
+
+podman run -d \
+        --name $CONTAINER \
+        --network $NETWORK \
+        --network-alias $NETWORK_ALIAS \
+        --user $CONTAINER_UID:$CONTAINER_UID \
+        -p $HOST_PORT:5432 \
+        -v $VOLUME:/var/lib/pgsql/data \
+        -e POSTGRES_PASSWORD="$ENV_POSTGRES_PASSWORD" \
+        $IMAGEp
+```
+
 ## Application Container Image Features
 
 ### Extensions
