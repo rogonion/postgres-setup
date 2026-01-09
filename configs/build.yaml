@@ -40,8 +40,6 @@ Postgres:
       "libzstd-devel",  # WAL/Backup compression
 
       # With Flag: --with-systemd
-
-      # With Flag: --with-systemd
       "systemd-devel"  # For systemd integration (optional but good)
     ]
     Flags:
@@ -72,6 +70,8 @@ Postgres:
     Resources: "resources" # Path to folder containing entrypoint script, pg_hba.conf, and postgresql.conf
     Uid: 26 # postgres user id
     Gid: 26 # postgres group id
+    Ports:
+      - 5432
 
 Rum:
   Current: "1.3.15"

@@ -178,8 +178,13 @@ class RuntimeBuilder(BaseBuilder):
 
             container.configure([
                 ("--label", f"org.postgres.version={self.config.Postgres.Version}"),
-                ("--label", f"org.postgres.prefix={self.config.Postgres.Prefix}"),
+                ("--label", f"org.postgres.prefix={self.config.Postgres.Prefix}")
             ])
+            if self.config.Postgres.Runtime.Ports:
+                for port in self.config.Postgres.Runtime.Ports:
+                    container.configure([
+                        ("--port", f"{port}")
+                    ])
             image_name_tag = self.image_name + ":" + self.image_tag
             container.commit(image_name_tag)
 

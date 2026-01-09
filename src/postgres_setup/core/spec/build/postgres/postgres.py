@@ -13,6 +13,7 @@ class RuntimeConfig(BaseModel):
     Resources: str = "resources"
     Uid: int = 26
     Gid: int = 26
+    Ports: List[int] = Field(default_factory=list)
 
 
 class PostgresConfig(BaseModel):

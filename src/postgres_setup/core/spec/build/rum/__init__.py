@@ -1,1 +1,1 @@
-from .pgvector import RumConfig
+from .rum import RumConfig
