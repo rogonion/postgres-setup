@@ -7,7 +7,7 @@ from typing import Any, List, Optional, Dict, Tuple
 import sh
 from rich.console import Console
 
-from .spec import BuildSpec
+from ..spec import BuildSpec
 
 console = Console()
 
@@ -206,8 +206,12 @@ class BuildahContainer:
         console.print(f"[dim]buildah {' '.join(args)}[/dim]")
         self._buildah_cmd(*args)
 
-    def commit(self, tag: str, cmd: Optional[List[str]] = None, changes: Optional[List[str]] = None):
+    def commit(self, tag: str, cmd: Optional[List[str]] = None, changes: Optional[List[str]] = None,
+               squash: bool = False):
         args = ["commit"]
+
+        if squash:
+            args.append("--squash")
 
         if cmd:
             args.extend(["--cmd", json.dumps(cmd)])

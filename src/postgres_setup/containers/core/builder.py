@@ -1,4 +1,4 @@
-from postgres_setup.core import BaseBuilder, BuildahContainer, prune_cache_images, BuildSpec
+from postgres_setup.core import BaseBuilder, BuildahContainer, prune_cache_images, BuildSpec, init_base_distro
 
 
 class CoreBuilder(BaseBuilder):
@@ -25,15 +25,15 @@ class CoreBuilder(BaseBuilder):
                 config=self.config,
                 cache_prefix=self.cache_prefix
         ) as container:
+            base_distro = init_base_distro(self.config.Distro, container)
+
             self.log(
                 f"[bold blue]Step {current_step}/{total_no_of_steps}[/bold blue]: Installing build dependencies")
 
-            container.run_cached(
-                command=[
-                    "sh", "-c",
-                    f"""
-                        zypper --non-interactive refresh &&
-                        zypper --non-interactive install """ + " ".join(self.config.Postgres.Build.Dependencies)],
+            base_distro.refresh_package_repository()
+
+            base_distro.install_packages(
+                packages=self.config.Postgres.Build.Dependencies,
                 extra_cache_keys={"step": "deps", "packages": sorted(self.config.Postgres.Build.Dependencies)}
             )
 

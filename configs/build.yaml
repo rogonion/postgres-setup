@@ -1,5 +1,8 @@
+# Build configuration using opensuse leap as the base image
+
 ProjectName: "postgres-setup"
-BaseImage: "registry.opensuse.org/opensuse/leap:16.0" # must be openSUSE
+BaseImage: "registry.opensuse.org/opensuse/leap:16.0"
+Distro: "suse"
 
 Buildah:
   Path: "buildah"
@@ -54,7 +57,7 @@ Postgres:
   Runtime:
     Dependencies: [
       # Core libs
-      "rsync", # Required for merging pgsql in extensions with final postgres image
+      "rsync", # Required for merging pgsql in extensions with final postgres image.
       "shadow", # Required for user creation
       "procps", # Required for 'pg_ctl' status checks
       "timezone", # Required for Postgres logging/timestamps
@@ -66,7 +69,16 @@ Postgres:
       "openssl-3",   # With Build.Flag:  --with-openssl
       "libxml2-2",     # With Build.Flag:  --with-libxml
       "libreadline8",  # NO Build.Flag: --without-readline
+      "timezone",
+      "ca-certificates",
+      "ca-certificates-mozilla"
     ] # Postgres specific (potentially dependent on Build.Dependencies)
+    RemoveDependencies: [
+      "rsync" # Not needed in runtime.
+    ]
+    Environment:
+      - "TZ=Africa/Nairobi"
+      - "LANG=C.UTF-8"
     Resources: "resources" # Path to folder containing entrypoint script, pg_hba.conf, and postgresql.conf
     Uid: 26 # postgres user id
     Gid: 26 # postgres group id

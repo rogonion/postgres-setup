@@ -1,18 +1,25 @@
+from enum import StrEnum
+
 from pydantic import BaseModel, Field
 
-from postgres_setup.core.spec.build.pgvector import PgvectorConfig
-from postgres_setup.core.spec.build.postgis import PostgisConfig
-from postgres_setup.core.spec.build.postgres import PostgresConfig
-from postgres_setup.core.spec.build.rum import RumConfig
+from .pgvector import PgvectorConfig
+from .postgis import PostgisConfig
+from .postgres import PostgresConfig
+from .rum import RumConfig
 
 
 class BuildahConfig(BaseModel):
     Path: str = 'buildah'
 
 
+class Distro(StrEnum):
+    SUSE = "suse"
+
+
 class BuildSpec(BaseModel):
     ProjectName: str
     BaseImage: str
+    Distro: Distro
     Buildah: BuildahConfig = Field(default_factory=BuildahConfig)
     Postgres: PostgresConfig = Field(default_factory=PostgresConfig)
     Postgis: PostgisConfig = Field(default_factory=PostgisConfig)

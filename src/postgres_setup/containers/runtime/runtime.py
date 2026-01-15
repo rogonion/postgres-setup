@@ -39,11 +39,17 @@ def build(
         extensions: Optional[str] = typer.Option("", "--extensions", "--e",
                                                  help="Optional. Comma-separated list of extensions e.g, postgis=3.6.1, pgvector=latest"),
         cache_prefix: Optional[str] = typer.Option("", "--cache-prefix", "--c",
-                                                   help="Optional. Custom prefix for generated images acting as cache layers.")
+                                                   help="Optional. Custom prefix for generated images acting as cache layers."),
+        remove_package_manager: Optional[bool] = typer.Option(True, "--remove-package-manager", "--rp",
+                                                              help="Optional. Remove dependency manager at the end of image build. Slims the image and improves security."),
+        squash: Optional[bool] = typer.Option(True, "--squash", "--sq",
+                                              help="Optional. Merge layers into one. Important if remove_package_manager is set to True")
 ):
     """
     Build postgres runtime image with optional extensions.
 
+    :param squash:
+    :param remove_package_manager:
     :param cache_prefix:
     :param spec_file:
     :param image_name:
@@ -55,7 +61,8 @@ def build(
 
     extension_list = parse_extensions(extensions)
 
-    builder = RuntimeBuilder(config, cache_prefix, image_name, image_tag, extensions=extension_list)
+    builder = RuntimeBuilder(config, cache_prefix, image_name, image_tag, extensions=extension_list,
+                             remove_package_manager=remove_package_manager, squash=squash)
 
     builder.build()
 

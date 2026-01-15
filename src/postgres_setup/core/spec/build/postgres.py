@@ -10,6 +10,8 @@ class BuildConfig(BaseModel):
 
 class RuntimeConfig(BaseModel):
     Dependencies: List[str] = Field(default_factory=list)
+    RemoveDependencies: List[str]  =Field(default_factory=list)
+    Environment: List[str] = Field(default_factory=list)
     Resources: str = "resources"
     Uid: int = 26
     Gid: int = 26

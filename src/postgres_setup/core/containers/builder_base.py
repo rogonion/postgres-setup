@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from rich.console import Console
 
 from .buildah import BuildahContainer
-from postgres_setup.core.spec import BuildSpec
+from ..spec import BuildSpec
 
 console = Console()
 

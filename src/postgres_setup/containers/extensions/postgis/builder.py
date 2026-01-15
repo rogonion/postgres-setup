@@ -1,4 +1,4 @@
-from postgres_setup.core import BaseBuilder, BuildahContainer, prune_cache_images, BuildSpec
+from postgres_setup.core import BaseBuilder, BuildahContainer, prune_cache_images, BuildSpec, init_base_distro
 
 
 class PostgisBuilder(BaseBuilder):
@@ -39,17 +39,16 @@ class PostgisBuilder(BaseBuilder):
                 config=self.config,
                 cache_prefix=self.cache_prefix
         ) as container:
+            base_distro = init_base_distro(self.config.Distro, container)
             if self.version_config.Build.Dependencies:
                 total_no_of_steps += 1
                 self.log(
                     f"[bold blue]Step {current_step}/{total_no_of_steps}[/bold blue]: Installing build dependencies")
 
-                container.run_cached(
-                    command=[
-                        "sh", "-c",
-                        f"""
-                        zypper --non-interactive refresh &&
-                        zypper --non-interactive install """ + " ".join(self.version_config.Build.Dependencies)],
+                base_distro.refresh_package_repository()
+
+                base_distro.install_packages(
+                    packages=self.version_config.Build.Dependencies,
                     extra_cache_keys={"step": "deps", "packages": sorted(self.version_config.Build.Dependencies)}
                 )
                 current_step += 1
