@@ -1,30 +1,36 @@
 version: '3'
 
-env:
-  ENV: '.tmp'
-  POSTGRES_SETUP_POETRY: 'poetry' # path to poetry
-
-dotenv: [ '.env', '{{.ENV}}/.env', '{{.HOME}}/.env' ]
-
 tasks:
-  init:
-    desc: "Configure poetry and install dependencies"
+  env:venv:
+    desc: "Create venv environment"
+    # The status check prevents the task from running if the directory exists
+    status:
+      - test -d .venv
     cmds:
-      - $POSTGRES_SETUP_POETRY install
-      - mkdir -p .tmp
+      - python3 -m venv .venv
+
+  deps:
+    desc: "Download dependencies."
+    # Ensures the venv is created before trying to install dependencies
+    deps: 
+      - env:venv
+    # Taskfile will only run this if requirements.txt is newer than our marker file
     sources:
-      - pyproject.toml
-      - poetry.lock
+      - requirements.txt
     generates:
-      - .venv/bin/python
+      - .venv/.deps_installed
+    cmds:
+      - echo "📦 Downloading dependencies..."
+      # Use the pip inside the venv directly
+      - .venv/bin/pip install -r requirements.txt
+      # Create a hidden marker file so Taskfile knows the install finished successfully
+      - touch .venv/.deps_installed
+
   run:
-    desc: "Run the CLI tool"
+    desc: "Main application. Run with arg `--help` for more details."
+    # Ensures dependencies are installed before trying to run the app
+    deps: 
+      - deps
     cmds:
-      - $POSTGRES_SETUP_POETRY run python -m postgres_setup.main {{.CLI_ARGS}}
-  clean:
-    desc: "Remove virtual environment and temporary artifacts"
-    cmds:
-      - rm -rf .venv
-      - rm -rf dist
-      - find . -type d -name "__pycache__" -exec rm -rf {} +
-      - echo "Clean complete"
+      # Use the python inside the venv directly
+      - .venv/bin/python -m src.main {{.CLI_ARGS}}

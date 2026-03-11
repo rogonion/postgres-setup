@@ -3,11 +3,11 @@ set -e
 
 # --- Configuration ---
 # 1. Pick your version
-TASK_VERSION="v3.46.3"
+TASK_VERSION="v3.48.0"
 
 # 2. Pin the SHA256 of the 'task_checksums.txt' file for that version.
-#    (Get this by downloading the checksums.txt from Github Releases and running 'shasum -a 256' on it)
-CHECKSUMS_FILE_HASH="ebfc2a80d4c212a24b5ed14d4d3f51b2999cf83f6c33e9b42e770065aa718715"
+# (Get this by downloading the checksums.txt from Github Releases and running 'shasum -a 256' on it)
+CHECKSUMS_FILE_HASH="3c23a008578914fc64443ed92817cc3ebed46d36adc61975286fefa9c206e028"
 
 INSTALL_DIR="./.task"
 BINARY_NAME="task"

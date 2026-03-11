@@ -1,34 +1,34 @@
-from postgres_setup.core import BaseBuilder, BuildSpec, BuildahContainer, prune_cache_images, init_base_distro
+from src.core import BaseBuilder, BuildSpec, BuildahContainer, prune_cache_images, init_base_distro
 
 
-class RumBuilder(BaseBuilder):
+class PgvectorBuilder(BaseBuilder):
     def __init__(self, config: BuildSpec, ext_version: str = "", cache_prefix: str = ""):
         self._init_ext_version(config, ext_version)
         super().__init__(config, cache_prefix)
         self.base_image = f"{self.config.ProjectName}-core:{self.config.Postgres.Version}"
-        self.image_name = f"{self.config.ProjectName}-rum"
+        self.image_name = f"{self.config.ProjectName}-pgvector"
         self.image_tag = self.config.Postgres.Version + "-" + self.ext_version
 
     def _init_ext_version(self, config: BuildSpec, ext_version: str):
         if not len(ext_version) > 0 or ext_version == "latest":
-            ext_version = config.Rum.Current
+            ext_version = config.Pgvector.Current
 
-        for version, data in config.Rum.Versions.items():
+        for version, data in config.Pgvector.Versions.items():
             if version == ext_version:
                 self.ext_version = ext_version
                 self.version_config = data
                 return
 
-        raise RuntimeError(f"No config found for rum extension version {ext_version}")
+        raise RuntimeError(f"No config found for pgvector extension version {ext_version}")
 
     def _init_cache_prefix(self, cache_prefix: str):
         if len(cache_prefix) > 0:
             self.cache_prefix = cache_prefix
         else:
-            self.cache_prefix = f"{self.config.ProjectName}/cache/rum/{self.ext_version}"
+            self.cache_prefix = f"{self.config.ProjectName}/cache/pgvector/{self.ext_version}"
 
     def build(self):
-        self.log(f"Starting build for Rum {self.ext_version}", style="bold blue")
+        self.log(f"Starting build for Pgvector {self.ext_version}", style="bold blue")
 
         current_step = 1
         total_no_of_steps = 4
@@ -51,34 +51,36 @@ class RumBuilder(BaseBuilder):
                     packages=self.version_config.Build.Dependencies,
                     extra_cache_keys={"step": "deps", "packages": sorted(self.version_config.Build.Dependencies)}
                 )
+
                 current_step += 1
 
             self.log(
                 f"[bold blue]Step {current_step}/{total_no_of_steps}[/bold blue]: Cloning {self.version_config.SourceUrl} tag {self.ext_version}")
-            src_dir = f"/tmp/rum-{self.ext_version}"
+            src_dir = f"/tmp/pgvector-{self.ext_version}"
             container.run_cached(
                 command=[
-                    "git", "clone", "--depth", "1", "--branch", f"{self.ext_version}",
+                    "git", "clone", "--depth", "1", "--branch", f"v{self.ext_version}",
                     self.version_config.SourceUrl, src_dir
                 ],
                 extra_cache_keys={"step": "source", "url": self.version_config.SourceUrl,
-                                  "version": f"{self.ext_version}", "src_dir": src_dir}
+                                  "version": f"v{self.ext_version}", "src_dir": src_dir}
             )
 
             current_step += 1
             self.log(f"[bold blue]Step {current_step}/{total_no_of_steps}[/bold blue]: Compiling and installing")
 
+            opt_flags = " ".join(self.version_config.Build.Flags)
             container.run_cached(
                 command=[
                     "sh", "-c",
                     f"""
                     cd {src_dir} && 
                     export PG_CONFIG={self.config.Postgres.Prefix}/bin/pg_config &&
-                    make USE_PGXS=1 clean &&
-                    make USE_PGXS=1 -j$(nproc) && 
-                    make USE_PGXS=1 install""",
+                    make clean &&
+                    make OPTFLAGS='{opt_flags}' -j$(nproc) && 
+                    make install""",
                 ],
-                extra_cache_keys={"step": "compile", "version": self.config.Postgres.Version}
+                extra_cache_keys={"step": "compile", "version": self.config.Postgres.Version, "opt_flags": opt_flags}
             )
 
             current_step += 1
@@ -90,13 +92,13 @@ class RumBuilder(BaseBuilder):
 
             # Check if control file exists
             try:
-                container.run(["ls", f"{pg_ext_dir}/rum.control"])
+                container.run(["ls", f"{pg_ext_dir}/vector.control"])
             except Exception:
-                self.log(f"[bold red]Error[/bold red]: rum.control not found in {pg_ext_dir}")
+                self.log(f"[bold red]Error[/bold red]: vector.control not found in {pg_ext_dir}")
                 raise
 
             # Check dynamic linking
-            so_file_cmd = f"find {pg_lib_dir} -name 'rum.so' | head -n 1"
+            so_file_cmd = f"find {pg_lib_dir} -name 'vector.so' | head -n 1"
 
             try:
                 # We use sh -c to allow the pipe and find command
@@ -105,7 +107,7 @@ class RumBuilder(BaseBuilder):
                 if "not found" in output:
                     self.log("[bold red]Linking Error[/bold red]: Missing dependencies detected")
                     self.log(output, style="dim red")
-                    raise RuntimeError("Rum compiled, but system dependencies are missing.")
+                    raise RuntimeError("Pgvector compiled, but system dependencies are missing.")
 
                 self.log("Verification successful.", style="bold green")
 
@@ -120,8 +122,8 @@ class RumBuilder(BaseBuilder):
 
             container.configure([
                 ("--label",
-                 f'org.opencontainers.image.title="PostgreSQL {self.config.Postgres.Version} with Rum {self.ext_version}"'),
-                ("--label", f'org.rum.version={self.ext_version}'),
+                 f'org.opencontainers.image.title="PostgreSQL {self.config.Postgres.Version} with Pgvector {self.ext_version}"'),
+                ("--label", f'org.pgvector.version={self.ext_version}'),
             ])
             container.commit(image_name_tag)
 

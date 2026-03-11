@@ -3,22 +3,24 @@ from typing import Optional
 
 import typer
 
-from .builder import CoreBuilder
-from postgres_setup.core import load_spec, BuildSpec
+from .builder import PgvectorBuilder
+from src.core import load_spec, BuildSpec
 
-app = typer.Typer(help="Core binaries for postgres.")
+app = typer.Typer(help="Add vector similarity search capabilities to postgres.")
 
 
-@app.command("build", help="Build postgres binaries from source (core).")
+@app.command("build", help="Build pgvector binaries from source (pgvector).")
 def build(
+        version: str = typer.Option("latest", "--version", "--v", help="Postgis version."),
         spec_file: Optional[Path] = typer.Option("configs/build.yaml", "--spec", "--s",
                                                  help="Path to build specification file."),
         cache_prefix: Optional[str] = typer.Option("", "--cache-prefix", "--c",
                                                    help="Optional. Custom prefix for generated images acting as cache layers.")
 ):
     """
-    Build postgres binaries from source (core).
+    Build pgvector binaries from source (pgvector).
 
+    :param version: Version of pgvector to build.
     :param spec_file: Path to build spec file.
     :param cache_prefix: Custom prefix for cache layers generated.
 
@@ -26,11 +28,11 @@ def build(
     """
     config = load_spec(spec_file, BuildSpec)
 
-    builder = CoreBuilder(config, cache_prefix)
+    builder = PgvectorBuilder(config, version, cache_prefix)
     builder.build()
 
 
-@app.command("delete-cache", help="Delete cache images used to build postgres binaries from source (core).")
+@app.command("delete-cache", help="Delete cache images used to build pgvector binaries from source (pgvector).")
 def delete_cache(
         spec_file: Optional[Path] = typer.Option("configs/build.yaml", "--spec", "--s",
                                                  help="Path to build specification file."),
@@ -38,7 +40,7 @@ def delete_cache(
                                                    help="Optional. Custom prefix for generated images acting as cache layers.")
 ):
     """
-    Delete cache images used to build postgres binaries from source (core).
+    Delete cache images used to build pgvector binaries from source (pgvector).
 
     :param spec_file: Path to build spec file.
     :param cache_prefix: Custom prefix for cache layers generated.
@@ -47,6 +49,6 @@ def delete_cache(
     """
     config = load_spec(spec_file, BuildSpec)
 
-    builder = CoreBuilder(config, cache_prefix=cache_prefix)
+    builder = PgvectorBuilder(config, cache_prefix)
 
     builder.prune_cache_images()

@@ -4,7 +4,7 @@ from typing import Optional, List, Tuple
 import typer
 
 from .builder import RuntimeBuilder
-from postgres_setup.core import BuildSpec, load_spec
+from src.core import BuildSpec, load_spec
 
 app = typer.Typer(help="A postgres runtime. Optionally with extensions.")
 

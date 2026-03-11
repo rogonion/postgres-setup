@@ -1,4 +1,4 @@
-from postgres_setup.core import BaseBuilder, BuildahContainer, prune_cache_images, BuildSpec, init_base_distro
+from src.core import BaseBuilder, BuildahContainer, prune_cache_images, BuildSpec, init_base_distro
 
 
 class CoreBuilder(BaseBuilder):

@@ -1,10 +1,10 @@
 from pathlib import Path
 from typing import Tuple, List, Optional
 
-from postgres_setup.containers.extensions.pgvector import PgvectorRuntime
-from postgres_setup.containers.extensions.postgis import PostgisRuntime
-from postgres_setup.containers.extensions.rum import RumRuntime
-from postgres_setup.core import BaseBuilder, BuildSpec, prune_cache_images, BuildahContainer, init_base_distro
+from src.containers.extensions.pgvector import PgvectorRuntime
+from src.containers.extensions.postgis import PostgisRuntime
+from src.containers.extensions.rum import RumRuntime
+from src.core import BaseBuilder, BuildSpec, prune_cache_images, BuildahContainer, init_base_distro
 
 EXTENSIONS = ["postgis", "pgvector", "rum"]
 

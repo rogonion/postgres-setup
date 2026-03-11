@@ -3,13 +3,14 @@ from typing import Optional
 
 import typer
 
-from .builder import PostgisBuilder
-from postgres_setup.core import load_spec, BuildSpec
+from .builder import RumBuilder
+from src.core import load_spec, BuildSpec
 
-app = typer.Typer(help="Add geospatial capabilities to postgres.")
+app = typer.Typer(
+    help="Enhances text search capabilities using RUM index.")
 
 
-@app.command("build", help="Build postgis binaries from source (postgis).")
+@app.command("build", help="Build rum binaries from source (rum).")
 def build(
         version: str = typer.Option("latest", "--version", "--v", help="Postgis version."),
         spec_file: Optional[Path] = typer.Option("configs/build.yaml", "--spec", "--s",
@@ -18,9 +19,9 @@ def build(
                                                    help="Optional. Custom prefix for generated images acting as cache layers.")
 ):
     """
-    Build postgis binaries from source (postgis).
+    Build rum binaries from source (rum).
 
-    :param version: Version of postgis to build.
+    :param version: Version of rum to build.
     :param spec_file: Path to build spec file.
     :param cache_prefix: Custom prefix for cache layers generated.
 
@@ -28,11 +29,11 @@ def build(
     """
     config = load_spec(spec_file, BuildSpec)
 
-    builder = PostgisBuilder(config, version, cache_prefix)
+    builder = RumBuilder(config, version, cache_prefix)
     builder.build()
 
 
-@app.command("delete-cache", help="Delete cache images used to build postgis binaries from source (postgis).")
+@app.command("delete-cache", help="Delete cache images used to build rum binaries from source (rum).")
 def delete_cache(
         spec_file: Optional[Path] = typer.Option("configs/build.yaml", "--spec", "--s",
                                                  help="Path to build specification file."),
@@ -40,7 +41,7 @@ def delete_cache(
                                                    help="Optional. Custom prefix for generated images acting as cache layers.")
 ):
     """
-    Delete cache images used to build postgis binaries from source (postgis).
+    Delete cache images used to build rum binaries from source (rum).
 
     :param spec_file: Path to build spec file.
     :param cache_prefix: Custom prefix for cache layers generated.
@@ -49,6 +50,6 @@ def delete_cache(
     """
     config = load_spec(spec_file, BuildSpec)
 
-    builder = PostgisBuilder(config, cache_prefix)
+    builder = RumBuilder(config, cache_prefix)
 
     builder.prune_cache_images()

@@ -1,23 +1,23 @@
-from postgres_setup.core import BaseRuntime, init_base_distro
+from src.core import BaseRuntime, init_base_distro
 
 
-class PgvectorRuntime(BaseRuntime):
+class PostgisRuntime(BaseRuntime):
     def _init_ext_version(self, ext_version: str):
         if not len(ext_version) > 0 or ext_version == "latest":
-            ext_version = self.config.Pgvector.Current
+            ext_version = self.config.Postgis.Current
 
-        for version, data in self.config.Pgvector.Versions.items():
+        for version, data in self.config.Postgis.Versions.items():
             if version == ext_version:
                 self.ext_version = ext_version
                 self.version_config = data
                 return
 
-        raise RuntimeError(f"No config found for pgvector extension version {ext_version}")
+        raise RuntimeError(f"No config found for postgis extension version {ext_version}")
 
     def build(self):
-        self.log(f"Adding Pgvector extension version {self.ext_version}", style="bold blue")
+        self.log(f"Adding Postgis extension version {self.ext_version}", style="bold blue")
 
-        pgvector_source_image = f"{self.config.ProjectName}-pgvector" + ":" + self.config.Postgres.Version + "-" + self.ext_version
+        postgis_source_image = f"{self.config.ProjectName}-postgis" + ":" + self.config.Postgres.Version + "-" + self.ext_version
 
         base_distro = init_base_distro(self.config.Distro, self.src_container)
         if self.version_config.Runtime and self.version_config.Runtime.Dependencies:
@@ -29,11 +29,11 @@ class PgvectorRuntime(BaseRuntime):
                 extra_cache_keys={"step": "deps", "packages": sorted(deps)}
             )
 
-        staging_dir = f"/tmp/stage_pgvector-{self.ext_version}"
-        self.log(f"[bold blue]Copying pgvector source into staging directory[/bold blue]: {staging_dir}")
+        staging_dir = f"/tmp/stage_postgis-{self.ext_version}"
+        self.log(f"[bold blue]Copying postgis source into staging directory[/bold blue]: {staging_dir}")
 
         self.src_container.copy_container_current(
-            pgvector_source_image,
+            postgis_source_image,
             self.config.Postgres.Prefix,
             staging_dir
         )
