@@ -1,0 +1,23 @@
+[project]
+name = "setup"
+version = "0.1.0"
+description = "CLI driving postgres-setup's core hexagon: build, runtime, push, pull, clean, profiles."
+readme = "README.md"
+authors = [
+    { name = "Declan Joseph", email = "declan.obu@outlook.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "core",
+    "typer>=0.27.3",
+]
+
+[project.scripts]
+setup = "setup:main"
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+core = { workspace = true }

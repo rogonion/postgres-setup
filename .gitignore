@@ -1,0 +1,21 @@
+# Tarball cache (verified sources for artifact builds)
+.cache/
+
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+wheels/
+*.egg-info
+.pytest_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv
+
+# temporary/scratch space
+**/.tmp/
+**/.temp/
+
+# User-local registry configuration
+config/registry.toml

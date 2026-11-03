@@ -1,0 +1,18 @@
+[project]
+name = "core"
+version = "0.1.0"
+description = "Hexagonal core of postgres-setup: domain models/ports/errors, application use cases, infra adapters."
+readme = "README.md"
+authors = [
+    { name = "Declan Joseph", email = "declan.obu@outlook.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "httpx>=0.28",
+    "pydantic>=2.14.2",
+    "rich>=13.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"

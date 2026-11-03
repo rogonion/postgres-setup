@@ -1,0 +1,9 @@
+# Global configuration. Relative paths resolve against the repository root.
+
+# Download cache for the pinned source tarballs (sha256-verified on download
+# and on every later use; git-ignored, re-downloadable).
+cache_dir = ".cache"
+
+# Runtime-image resources copied into the assembled runtime image by
+# `setup runtime`: entrypoint.sh, postgresql.conf, pg_hba.conf.
+resources_dir = "resources"

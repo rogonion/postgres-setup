@@ -1,0 +1,1 @@
+"""ImageRegistry port implementations."""

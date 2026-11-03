@@ -1,0 +1,44 @@
+# Pinned upstream sources: the single versions file.
+# sha256 = `sha256sum` of the archive. Upgrading = edit here, bump the
+# profile `version` in profiles.toml, then re-run; a stale image rebuilds
+# automatically.
+#
+# Extension entries keep the pin (version/url/sha256), the control file used
+# to verify the build, and the recipe-specific flags; per-distro build/runtime
+# packages live in profiles.toml under [[profiles.<distro>.extensions]].
+
+[postgres]
+version = "18.1"
+archive = "postgresql-18.1.tar.bz2"
+url = "https://ftp.postgresql.org/pub/source/v18.1/postgresql-18.1.tar.bz2"
+sha256 = "ff86675c336c46e98ac991ebb306d1b67621ece1d06787beaade312c2c915d54"
+
+[extensions.postgis]
+version = "3.6.1"
+archive = "postgis-3.6.1.tar.gz"
+url = "https://download.osgeo.org/postgis/source/postgis-3.6.1.tar.gz"
+sha256 = "ec0cfaab475630106211d180d71df46782e41e10b6dffe91d79ca818ecd2cbb4"
+control_file = "postgis.control"
+configure_flags = [
+    "--with-protobuf",
+    "--with-address-standardizer",
+]
+
+[extensions.pgvector]
+version = "0.8.1"
+archive = "pgvector-0.8.1.tar.gz"
+url = "https://github.com/pgvector/pgvector/archive/refs/tags/v0.8.1.tar.gz"
+sha256 = "a9094dfb85ccdde3cbb295f1086d4c71a20db1d26bf1d6c39f07a7d164033eb4"
+control_file = "vector.control"
+make_flags = [
+    "-march=x86-64-v3", # vector ops for most CPUs made after 2015
+    "-O3",              # prioritize execution speed
+    "-flto",            # link time optimization
+]
+
+[extensions.rum]
+version = "1.3.15"
+archive = "rum-1.3.15.tar.gz"
+url = "https://github.com/postgrespro/rum/archive/refs/tags/1.3.15.tar.gz"
+sha256 = "e79b3a67df9821bc0d86fd463dac7249f1729d9dd04f77db767e2815098247b8"
+control_file = "rum.control"

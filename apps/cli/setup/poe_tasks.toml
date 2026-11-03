@@ -1,0 +1,18 @@
+# Tasks for this member, named with the workspace-wide `<path_to_repo>:action`
+# convention (poe task names may not contain "/"; path separators become "-"):
+#   apps/cli/setup:build  ->  apps-cli-setup:build
+# The root poe_tasks.toml includes this file and sets cwd here, so `uv run`
+# resolves against this member.
+
+[tool.poe.tasks]
+"apps-cli-setup:build" = "uv run setup build"
+"apps-cli-setup:build-core" = "uv run setup build-core"
+"apps-cli-setup:build-extension" = "uv run setup build-extension"
+"apps-cli-setup:assemble" = "uv run setup assemble"
+"apps-cli-setup:runtime" = "uv run setup runtime"
+"apps-cli-setup:push" = "uv run setup push"
+"apps-cli-setup:pull" = "uv run setup pull"
+"apps-cli-setup:clean" = "uv run setup clean"
+"apps-cli-setup:tag" = "uv run setup tag"
+"apps-cli-setup:profiles" = "uv run setup profiles"
+"apps-cli-setup:test" = "uv run pytest tests -q"

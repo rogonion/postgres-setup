@@ -1,0 +1,40 @@
+[project]
+name = "postgres-setup"
+version = "0.1.0"
+description = "Pinned from-source PostgreSQL builder; container images are the artifact store, the runtime image the product."
+readme = "README.md"
+authors = [
+    { name = "Declan Joseph", email = "declan.obu@outlook.com" }
+]
+requires-python = ">=3.13"
+dependencies = ["core", "rich>=15.0.0", "typer>=0.27.3"]
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+# The root is a virtual workspace root: no package of its own (src/ removed),
+# its dependencies still install into the workspace venv.
+package = false
+
+[tool.uv.sources]
+core = { workspace = true }
+
+[tool.uv.workspace]
+members = ["apps/*/*", "libs/python/*"]
+
+[dependency-groups]
+dev = ["pytest>=9.1.1", "poethepoet>=0.49.0", "ruff>=0.14"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+src = [
+    "libs/python/core/src",
+    "apps/cli/setup/src",
+]
+exclude = [".venv", ".tmp"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]

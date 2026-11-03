@@ -1,0 +1,16 @@
+# Root task registry. Each workspace member keeps its own poe_tasks.toml and
+# is included here by file path (poe does not resolve directories) with its
+# cwd set to the member dir. Task names follow the `<path_to_repo>:action`
+# convention and are defined inside each member's file.
+
+[tool.poe]
+include = [
+    { path = "apps/cli/setup/poe_tasks.toml", cwd = "apps/cli/setup" },
+]
+
+# Workspace-wide utility tasks (not member-scoped, so no path prefix).
+# One command to format everything: `poe format`; to verify: `poe lint`.
+[tool.poe.tasks]
+# shell (not cmd) so the && chaining works; cmd tasks run without a shell.
+format = { shell = "uv run ruff format . && uv run ruff check --fix ." }
+lint = { shell = "uv run ruff check . && uv run ruff format --check ." }

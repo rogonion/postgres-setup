@@ -1,0 +1,145 @@
+# Build profiles: how the pinned sources are configured and captured.
+# Profiles are grouped by DISTRO: the profile name selects the base image and
+# the Distro adapter (suse -> zypper; ubuntu would add one apt adapter +
+# one table here). A profile carries the core build/runtime packages, the
+# configure flags, the runtime image shape (user, ports, data dir), and the
+# extensions built against the core.
+#
+# Image tags are profile-keyed: localhost/postgres-setup/postgres:suse-0.1.0
+# (core), localhost/postgres-setup/extension/<name>:suse-0.1.0 (per
+# extension), localhost/postgres-setup/runtime:suse-0.1.0 (the runtime image,
+# the product). Pin versions live in image labels and cache keys, not in
+# tags - bump the profile `version` when pins change.
+#
+# Adding a distro = one [profiles.<distro>] table + one Distro adapter +
+# one entry in core/adapters/distro/__init__.py.
+
+default = "suse"
+
+[profiles.suse]
+# Profile version: part of every image tag. Bump when pins change.
+version = "0.1.0"
+
+base_image = "registry.opensuse.org/opensuse/leap:16.0"
+prefix = "/usr/local/pgsql"
+# In-image output dir (set as POSTGRES_SETUP_OUTPUT_DIR in the runtime image).
+output_dir = "/usr/local/pgsql"
+
+# Layer-cache image prefix for intermediate build steps.
+cache_prefix = "localhost/postgres-setup/cache/suse"
+
+# Parallel compile jobs for make inside the sandbox. Bounded deliberately:
+# unbounded -j starves memory-constrained hosts. Unset = half the CPUs.
+jobs = 6
+
+# Core build packages: installed in the build sandbox only, never on the host.
+build_packages = [
+    # Core build tools
+    "gcc",
+    "make",
+    "tar",
+    "gzip",
+    "bzip2",
+    "flex",
+    "bison",
+    "perl",
+    "which",
+    "pkgconf-pkg-config",
+    "glibc-devel",
+    # Link-time features
+    "zlib-devel",
+    "libopenssl-devel",  # --with-openssl
+    "readline-devel",
+    "libxml2-devel",     # --with-libxml
+    "libicu-devel",      # --with-icu
+    "liblz4-devel",      # --with-lz4
+    "libzstd-devel",     # --with-zstd
+    "systemd-devel",     # --with-systemd
+]
+
+# Postgres configure flags.
+configure_flags = [
+    "--with-openssl",
+    "--with-libxml",
+    "--with-icu",
+    "--with-lz4",
+    "--with-zstd",
+    "--with-systemd",
+]
+
+# Runtime image packages (daemon userland). Postgres core runtime libs:
+# libicu77 (icu), liblz4-1, libzstd1, libsystemd0, openssl-3, libxml2-2,
+# libreadline8.
+runtime_packages = [
+    "shadow",     # user/group creation
+    "procps",     # pg_ctl status checks
+    "timezone",   # logging/timestamps
+    "libicu77",
+    "liblz4-1",
+    "libzstd1",
+    "libsystemd0",
+    "openssl-3",
+    "libxml2-2",
+    "libreadline8",
+]
+
+# Runtime image shape (the daemon contract).
+uid = 26
+gid = 26
+data_dir = "/var/lib/pgsql/data/18"
+config_dir = "/usr/share/postgresql/config"
+ports = [5432]
+
+# Extensions enabled for this distro. Each is compiled FROM the core artifact
+# image into its own image, then merged into the runtime image. The pin
+# (version/url/sha256, control file, recipe flags) lives in config/pins.toml
+# under [extensions.<name>]; build/runtime packages are per-distro and live
+# here.
+[[profiles.suse.extensions]]
+name = "postgis"
+build_packages = [
+    "make",
+    "gcc",
+    "gcc-c++",
+    "findutils",
+    "libgeos-devel",
+    "libproj-devel",
+    "libjson-c-devel",
+    "libxml2-devel",
+    "gdal-devel",          # raster support
+    "libprotobuf-c-devel", # --with-protobuf (geobuf, MVT)
+    "pcre2-devel",         # --with-address-standardizer
+]
+runtime_packages = [
+    "libgeos3_12_2",
+    "libproj25",
+    "libjson-c5",
+    "libgdal37",
+    "libtiff6",
+    "libcurl4",
+    "libsqlite3-0",
+    "libjpeg8",
+    "libpng16-16",
+    "libprotobuf-c1",
+    "libpcre2-8-0",
+]
+
+[[profiles.suse.extensions]]
+name = "pgvector"
+build_packages = [
+    "make",
+    "gcc",
+]
+runtime_packages = []
+
+[[profiles.suse.extensions]]
+name = "rum"
+build_packages = [
+    "make",
+    "gcc",
+    "findutils",
+]
+runtime_packages = []
+
+# Planned (not yet implemented):
+# - [profiles.ubuntu] with an apt Distro adapter

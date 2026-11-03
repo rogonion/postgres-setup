@@ -1,0 +1,13 @@
+# Copy to config/registry.toml (git-ignored) and edit. When present:
+# - `push` / `pull` publish/fetch the profile's final images (runtime, core,
+#   and each enabled extension image)
+# - `runtime --from auto` resolves a missing runtime image by pulling it
+#   instead of building from source (--from build | pull override)
+# Authenticate once with `buildah login <namespace-host>`.
+[registry]
+# Image namespace: replaces the local "localhost/" prefix.
+# localhost/postgres-setup/runtime:suse-0.1.0
+#   -> ghcr.io/rogonion/postgres-setup/runtime:suse-0.1.0
+namespace = "ghcr.io/rogonion"
+# Set false for plain-HTTP LAN registries (e.g. localhost:5000).
+tls_verify = true
